@@ -12,7 +12,7 @@ import { PersonaModule } from './persona/persona.module';
         type: 'postgres',
         host: configService.get('HOST'),
         port: configService.get('PORT'),
-        username: configService.get('USER'),
+        username: configService.get('USERNAME'),
         password: configService.get('PASS'),
         database: configService.get('DB'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],

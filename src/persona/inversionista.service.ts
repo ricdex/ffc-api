@@ -40,6 +40,7 @@ export class InversionistaService {
           ],
           dynamic_template_data: {
             nombre: inversionista.nombre.toUpperCase(),
+            tipo: 'Inversionista',
           },
         },
       ],

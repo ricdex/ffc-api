@@ -40,6 +40,7 @@ export class EmpresaService {
           ],
           dynamic_template_data: {
             nombre: empresa.razonSocial.toUpperCase(),
+            tipo: 'Empresa',
           },
         },
       ],
