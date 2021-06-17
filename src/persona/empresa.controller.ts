@@ -17,6 +17,7 @@ import { EmpresaService } from './empresa.service';
 
 import { Empresa } from './entities/empresa.entity';
 import { RegistrarEmpresa } from './entities/empresa.dto';
+import { validateCaptcha } from '../util/captcha';
 
 @Controller('empresa')
 export class EmpresaController {
@@ -35,20 +36,7 @@ export class EmpresaController {
   // eslint-disable-next-line prettier/prettier
   async registrarEmpresa(@Body() empresaDTO: RegistrarEmpresa, @Param() params): Promise<Empresa> {
     const secretKey = this.configService.get('RECAPTCHA');
-    const url =
-      'https://www.google.com/recaptcha/api/siteverify?secret=' +
-      secretKey +
-      '&response=' +
-      params.token;
-
-    const result = await this.httpService
-      .post(url)
-      .pipe(
-        map((response) => {
-          return response['data'];
-        }),
-      )
-      .toPromise();
+    const result = await validateCaptcha(secretKey, params.token);
 
     if (!result.success) throw new BadRequestException();
 

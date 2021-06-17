@@ -4,6 +4,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Empresa } from './entities/empresa.entity';
 import { ConfigService } from '@nestjs/config';
 import { pdf2base64 } from 'pdf-to-base64';
+import { generateLink } from '../util/keynua';
+import { enviarCorreoEmpresaRegistro } from '../util/sendgrid';
 
 @Injectable()
 export class EmpresaService {
@@ -32,72 +34,25 @@ export class EmpresaService {
 
     const base64Str = await pdf2base64(documentPDF);
     //generacion del link
-    const headersRequestKeynua = {
-      'Content-Type': 'application/json',
-      authorization: `${keynuaToken}`,
-      'x-api-key': `${keynuaKey}`,
-    };
-    const dataKeynua = {
-      title: 'Contrato de registro en FFC',
-      languague: 'es',
-      documents: [
-        {
-          name: 'CONTRATO_SERVICIOS_FFC.pdf',
-          base64: base64Str,
-        },
-      ],
-      users: [
-        {
-          name:
-            empresa.representanteLegal.nombre +
-            ' ' +
-            empresa.representanteLegal.apellido,
-          groups: ['signers'],
-        },
-      ],
-    };
-    const result = await this.httpService
-      .post(`${keynuaPath}/contracts/v1`, dataKeynua, {
-        headers: headersRequestKeynua,
-      })
-      .toPromise();
-
-    const tokenLinkUrl = result.data.users[0].token;
+    const tokenLinkUrl = await generateLink(
+      keynuaToken,
+      keynuaKey,
+      base64Str,
+      empresa.representanteLegal.nombre,
+      empresa.representanteLegal.apellido,
+      keynuaPath,
+    );
 
     //generacion del correo
-    const headersRequest = {
-      'Content-Type': 'application/json', // afaik this one is not needed
-      Authorization: `Bearer ${secretKey}`,
-    };
-    const data = {
-      from: {
-        email: emailSender,
-      },
-      personalizations: [
-        {
-          to: [
-            {
-              email: empresa.usuario.correo,
-            },
-          ],
-          dynamic_template_data: {
-            nombre: empresa.razonSocial.toUpperCase(),
-            tipo: 'Empresa',
-            dni: empresa.usuario.correo,
-            link: `${keynuaLink}?token=${tokenLinkUrl}`,
-          },
-        },
-      ],
-
-      template_id: templateKey,
-    };
-
-    //enviar correo
-    await this.httpService
-      .post(`${emailUrl}`, data, {
-        headers: headersRequest,
-      })
-      .toPromise();
+    await enviarCorreoEmpresaRegistro(
+      secretKey,
+      emailSender,
+      empresa,
+      keynuaLink,
+      tokenLinkUrl,
+      templateKey,
+      emailUrl,
+    );
     return this.empresaRepository.save(empresa);
   }
 }
