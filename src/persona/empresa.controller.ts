@@ -11,10 +11,9 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 
-import { map } from 'rxjs/operators';
 import { ConfigService } from '@nestjs/config';
 import { EmpresaService } from './empresa.service';
-
+var utils = require('./utils/validations');
 import { Empresa } from './entities/empresa.entity';
 import { RegistrarEmpresa } from './entities/empresa.dto';
 
@@ -34,23 +33,8 @@ export class EmpresaController {
   @Post('onboarding/:token')
   // eslint-disable-next-line prettier/prettier
   async registrarEmpresa(@Body() empresaDTO: RegistrarEmpresa, @Param() params): Promise<Empresa> {
-    const secretKey = this.configService.get('RECAPTCHA');
-    const url =
-      'https://www.google.com/recaptcha/api/siteverify?secret=' +
-      secretKey +
-      '&response=' +
-      params.token;
-
-    const result = await this.httpService
-      .post(url)
-      .pipe(
-        map((response) => {
-          return response['data'];
-        }),
-      )
-      .toPromise();
-
-    if (!result.success) throw new BadRequestException();
+    
+    if (!utils.validateCaptcha(params,this.configService,this.httpService)) throw new BadRequestException();
 
     const empresa = new Empresa().fromDTO(empresaDTO);
     return this.empresaService.registrar(empresa);

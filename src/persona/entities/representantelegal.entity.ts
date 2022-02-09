@@ -41,6 +41,12 @@ export class RepresentanteLegal {
   @Column()
   distrito: string;
 
+  @Column()
+  correo: string;
+
+  @Column({ name: 'fact_id' })
+  factId: string;
+
   @CreateDateColumn({ name: 'fecha_creacion' })
   fechaCreacion: Date;
 

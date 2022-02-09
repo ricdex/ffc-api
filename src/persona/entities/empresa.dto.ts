@@ -14,6 +14,7 @@ export class RegistrarEmpresa {
   //representante legal
   representanteNrodocumento: string;
   representanteNombre: string;
+  representanteCorreo: string;
   representanteApellido: string;
   representanteDireccion: string;
   representanteTelefono: string;

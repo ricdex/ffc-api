@@ -71,6 +71,13 @@ export class Empresa {
   @JoinColumn({ name: 'usuario_id' })
   usuario: Usuario;
 
+  //facturedo
+  @Column({ name: 'fact_user' })
+  factUser: string;
+
+  @Column({ name: 'fact_entity' })
+  factEntity: string;
+
   fromDTO(dto: RegistrarEmpresa) {
     this.nrodocumento = dto.nrodocumento;
     this.razonSocial = dto.razonSocial;
@@ -92,6 +99,7 @@ export class Empresa {
     rl.departamento = dto.representanteDepartamento;
     rl.provincia = dto.representanteProvincia;
     rl.distrito = dto.representanteDistrito;
+    rl.correo = dto.representanteCorreo;
 
     this.representanteLegal = rl;
 
