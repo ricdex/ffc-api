@@ -16,6 +16,25 @@ export class OperacionService {
     private empresaService: EmpresaService,
   ) {}
 
+  async subirArchivo(file: Express.Multer.File) : Promise<string>
+  {
+    const loginResult = await this.httpService
+    .post('https://auth-sandbox.facturedo.com/oauth/token', 
+      {
+        "client_id": "ML1p8BWbWEsnwTfFQgNYp0wftcQrZn5x",
+        "client_secret": "xrwwrimypEh4Ha2b4IoaHVOW2l0ZIjmtKcHpiW2wqTu3ELuDyqf2CzEQyNElWlHO",
+        "audience":"https://klimb-api-sandbox",
+        "grant_type":"client_credentials"
+      })
+    .toPromise();
+
+    return upload.uploadFile({
+      "file_name" : file.filename,
+      "file" : file.buffer
+    }, loginResult.data.access_token,this.configService,this.httpService)
+  }
+
+
   async registrar(user : any, operacion: Operacion): Promise<Operacion> {
     
     //registrar en la bd
@@ -26,8 +45,6 @@ export class OperacionService {
     }
     const operacionRegistrada = await this.operacionRepository.save(operacion);
      
-    //enviar correo (TODO)
-    
     //enviar a facturedo
     //1. nos logeamos
     const loginResult = await this.httpService
@@ -61,22 +78,19 @@ export class OperacionService {
       })
     .toPromise();
 
-    //3. registramos el archivo
-    const url = upload.uploadFile(null, null,this.configService,this.httpService)
-
-    //4. agregamos el archivo legal
+    //3. agregamos el archivo legal
     const fileResult = await this.httpService
     .post('https://sandbox.facturedo.com/v2/kyc/invoices', 
       {
         "kyoperation_id": operacionResult.data.id,
         "number": "123123",
-        "issue_date": "2020-01-01",
-        "payment_date": "2020-12-12",
-        "amount": "50000",
+        "issue_date": operacion.fechaEmision,
+        "payment_date": operacion.fechaPago,
+        "amount": operacion.monto,
         "amount_currency": "PEN",
-        "invoice_pdf_url": url,
-        "invoice_xml_url": url,
-        "category": 1,
+        "invoice_pdf_url": operacion.urlPdf,
+        "invoice_xml_url": operacion.urlXml,
+        "category": operacion.categoria,
         "affectation": 2,
         "affect_percentage": 10
       },{
@@ -85,16 +99,16 @@ export class OperacionService {
     .toPromise();
 
     //5. Agregamos los contactos
-    const contactsResult = await this.httpService
+    await this.httpService
     .post('https://sandbox.facturedo.com/v2/kyc/business-rel-contacts', 
       {
-        "first_name": operacionResult.data.id,
-        "last_name": "123123",
-        "email": "2020-01-01",
-        "position": "2020-12-12",
-        "other_position": "50000",
-        "phone": "PEN",
-        "business_rel": url,
+        "first_name": operacion.nombreContacto,
+        "last_name": operacion.apellidoContacto,
+        "email": operacion.correoContacto,
+        "position": "1",
+        "other_position": operacion.posicionContacto,
+        "phone": operacion.telefonoContacto,
+        "business_rel":  operacionResult.data.business_relationship,
       },{
         headers: headersRequest,
       })
@@ -110,13 +124,12 @@ export class OperacionService {
       })
     .toPromise();
 
-    empresaRegistrada.factUser = empresaResult.data.user;
-    empresaRegistrada.factEntity = empresaResult.data.entity;
-    empresaRegistrada.representanteLegal.factId = representanteResult.data.id;
+    operacionRegistrada.operationId = operacionResult.data.id;
+    operacionRegistrada.businessRelationshipId = operacionResult.data.business_relationship;
 
-    return this.empresaRepository.save({
-      id : empresaRegistrada.id,
-      ...empresaRegistrada});
+    return this.operacionRepository.save({
+      id : operacion.id,
+      ...operacion});
 
   }
 }

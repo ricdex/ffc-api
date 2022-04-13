@@ -31,6 +31,18 @@ export class Operacion {
   @Column({ name: 'url_xml' })
   urlXml: string;
 
+  @Column({ name: 'monto' })
+  monto: number;
+
+  @Column({ name: 'fecha_emision' })
+  fechaEmision: Date;
+
+  @Column({ name: 'fecha_pago' })
+  fechaPago: Date;
+
+  @Column({ name: 'categoria' })
+  categoria: number;
+
   @CreateDateColumn({ name: 'fecha_creacion' })
   fechaCreacion: Date;
 
@@ -62,6 +74,10 @@ export class Operacion {
     this.apellidoContacto = dto.apellidoContacto;
     this.telefonoContacto = dto.telefonoContacto;
     this.posicionContacto = dto.posicionContacto;
+    this.monto = dto.monto;
+    this.fechaEmision = dto.fechaEmision;
+    this.fechaPago = dto.fechaPago;
+    this.categoria = dto.categoria;
 
 
     return this;

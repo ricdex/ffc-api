@@ -1,5 +1,8 @@
 import { BadRequestException, Body, Controller, HttpService, Param, Post, UseGuards,
-  Request, } from '@nestjs/common';
+  Request,
+  UseInterceptors,
+  UploadedFile, } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
 import { RegistrarOperacion } from './entities/operacion.dto';
 import { Operacion } from './entities/operacion.entity';
@@ -19,6 +22,15 @@ export class OperacionController {
     
     const operacion = new Operacion().fromDTO(operacionDTO);
     return this.operacionService.registrar(req.user,operacion);
+  }
+
+
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(FileInterceptor('file'))
+  @Post("upload")
+  async subirArchivo(@Request() req ,@UploadedFile() file: Express.Multer.File): Promise<string> {
+    
+    return this.operacionService.subirArchivo(file);
   }
 
 }

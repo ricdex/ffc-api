@@ -7,5 +7,10 @@ export class RegistrarOperacion {
   correoContacto: string;
   telefonoContacto: string;
   posicionContacto: string;
+  monto: number;
+  fechaEmision : Date;
+  fechaPago : Date;
+  categoria : number;
+
 
 }
