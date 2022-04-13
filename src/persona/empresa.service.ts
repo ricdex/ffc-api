@@ -18,6 +18,20 @@ export class EmpresaService {
     return this.empresaRepository.find();
   }
 
+  async findByFactUser(factUser: string): Promise<Empresa> {
+    const search: any = {
+      'factUser': factUser,
+    };
+    return this.empresaRepository.findOne(search);
+  }
+
+  async findByUser(correo: string): Promise<Empresa> {
+    const search: any = {
+      'usuario.correo': correo,
+    };
+    return this.empresaRepository.findOne(search);
+  }
+
   async registrar(empresa: Empresa): Promise<Empresa> {
     
     //registrar en la bd
@@ -84,6 +98,16 @@ export class EmpresaService {
         "id_number": empresaRegistrada.representanteLegal.nrodocumento,
         "birth_date": "2000-01-01",
         "seller": empresaResult.data.user
+      },{
+        headers: headersRequest,
+      })
+    .toPromise();
+
+    //4. Enviar a revision
+    await this.httpService
+    .patch('https://sandbox.facturedo.com/v2/accounts/user/' + empresaResult.data.user, 
+      {
+        "status": 1
       },{
         headers: headersRequest,
       })
